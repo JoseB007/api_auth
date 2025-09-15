@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from django.contrib.auth import get_user_model
 
@@ -7,9 +8,20 @@ from .serializers import (
     UserReadSerializer,
     RegisterSerializer,
     UserUpdateSerializer,
+    CustomTokenObtainPairSerializer,
 )
 
 User = get_user_model()
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    """
+    Vista personalizada que hereda las funciones de TokenObtainPairView
+    y que usa el serializer personalizado que contiene los datos
+    del usuario.
+    """
+    serializer_class = CustomTokenObtainPairSerializer
+
+
 
 
 class UserViewSet(viewsets.ModelViewSet):

@@ -145,4 +145,5 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
+    "UPDATE_LAST_LOGIN": True, # Usado para actualizar el last_login de la tabla de usuarios auth.user
 }

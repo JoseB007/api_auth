@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from django.contrib.auth.models import User
 
@@ -59,6 +60,40 @@ class UserUpdateSerializer(BaseUserSerializer):
         instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.save()
         return instance
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Serializer personalizado que hereda funcionalidades de TokenObtainPairSerializer
+    Esta se usará para agregar campos al serializer y poder devolver el token de 
+    usuario y los datos del usuario.
+    """
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        token['username'] = user.username
+        token['email'] = user.email
+        token['first_name'] = user.first_name
+        token['last_name'] = user.last_name
+
+        return token
+    
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        # Agregar info extra a la respuesta del login
+        data.update({
+            "user": {
+                "id": self.user.id,
+                "username": self.user.username,
+                "email": self.user.email,
+                "first_name": self.user.first_name,
+                "last_name": self.user.last_name,
+            }
+        })
+
+        return data
 
 
 class PasswordChangeSerializer(serializers.Serializer):
