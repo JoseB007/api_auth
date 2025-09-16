@@ -11,6 +11,7 @@ from .serializers import (
     CustomTokenObtainPairSerializer,
 )
 
+
 User = get_user_model()
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -30,6 +31,12 @@ class UserViewSet(viewsets.ModelViewSet):
     """
 
     queryset = User.objects.all()
+
+    def get_queryset(self):
+        # Solo devuelve el usuario autenticado
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return User.objects.filter(id=self.request.user.pk)
+        return super().get_queryset()
 
     def get_permissions(self):
         """
