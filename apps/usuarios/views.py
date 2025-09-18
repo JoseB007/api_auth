@@ -1,6 +1,10 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 
 from django.contrib.auth import get_user_model
 
@@ -8,6 +12,7 @@ from .serializers import (
     UserReadSerializer,
     RegisterSerializer,
     UserUpdateSerializer,
+    AdminUserReadSerializer,
     CustomTokenObtainPairSerializer,
 )
 
@@ -58,4 +63,63 @@ class UserViewSet(viewsets.ModelViewSet):
             return RegisterSerializer
         elif self.action in ["update", "partial_update"]:
             return UserUpdateSerializer
-        return UserReadSerializer
+        else:
+            if self.request.user.is_superuser:
+                return AdminUserReadSerializer
+            return UserReadSerializer
+
+
+
+
+class LogoutView(APIView):
+    """
+    Cierra sesión en este dispositivo.
+    Recibe el refresh_token y lo invalida.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        refresh_token = request.data.get("refresh")
+        if not refresh_token:
+            return Response(
+                {"detail": "El refresh token es requerido."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except:
+            return Response(
+                {"detail": "Token inválido o ya caducado."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response(
+            {"detail": "Sesión cerrada correctamente."},
+            status=status.HTTP_200_OK
+        )
+    
+
+
+
+class LogoutAllView(APIView):
+    """
+    Cierra sesión en todos los dispositivos.
+    Invalida todos los refresh tokens del usuario autenticado.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        tokens = OutstandingToken.objects.filter(user=request.user)
+
+        for token in tokens:
+            obj, _ = BlacklistedToken.objects.get_or_create(token=token)
+
+        return Response(
+            {"detail": "Sesión cerrada en todos los dispositivos."},
+            status=status.HTTP_200_OK
+        )
+
+
+

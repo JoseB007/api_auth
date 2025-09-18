@@ -115,3 +115,10 @@ class PasswordChangeSerializer(serializers.Serializer):
         user.set_password(self.validated_data['new_password'])
         user.save()
         return user
+
+
+class AdminUserReadSerializer(BaseUserSerializer):
+    last_login = serializers.DateTimeField(format="%d-%m-%Y %H:%M:%S", read_only=True)
+
+    class Meta(BaseUserSerializer.Meta):
+        fields = BaseUserSerializer.Meta.fields + ("is_staff", "is_superuser", "last_login")

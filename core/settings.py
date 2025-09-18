@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     # Django Rest Framework
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     # Apps
     "apps.usuarios",
 ]
@@ -144,6 +145,7 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
     "UPDATE_LAST_LOGIN": True, # Usado para actualizar el last_login de la tabla de usuarios auth.user
 }
