@@ -7,7 +7,20 @@
     <body>
         <h1>Lista de usuarios</h1>
         <button id="logout">Cerrar sesión</button>
-        <ul id="user-list"></ul>
+        <table id="usersTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+        </table>
+        <ul id="users-list"></ul>
+        <script src="js/api.js"></script>
         <script src="js/auth.js"></script>
         <script src="js/users.js"></script>
     </body>

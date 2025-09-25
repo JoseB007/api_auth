@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     requireAuth();
 
     const token = getAccessToken();
-    const usersList = document.getElementById("users-list");
+    const usersTableBody = document.getElementById("usersTableBody");
     const logoutBtn = document.getElementById("logout-btn");
 
     // Evento de logout
@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
         // Hacer petición al backend
-        const response = await fetchWithAuth(`${API_BASE_URL}${USERS_URL}`, {
+        const response = await fetchWithAuth(`${USERS_URL}`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -27,23 +27,48 @@ document.addEventListener("DOMContentLoaded", async () => {
             },
         });
 
-        console.log(response)
+        // Limpiar el contenido previo por si se recarga la lista
+        usersTableBody.innerHTML = "";
 
-        // Renderizar usuarios en la lista
-        // usersList.innerHTML = ""; // Limpiar contenido previo
-        // data.forEach((user) => {
-        //     const li = document.createElement("li");
-        //     li.textContent = `${user.id} - ${user.username}`;
-        //     li.style.cursor = "pointer";
+        // Iterar sobre los usuarios
+        response.forEach((user) => {
+            // Crear una fila
+            const tr = document.createElement("tr");
 
-        //     // Al hacer clic, redirige al detalle
-        //     li.addEventListener("click", () => {
-        //         window.location.href = `user_detail.html?id=${user.id}`;
-        //     });
+            // Crear y llenar celdas (td) para cada columna
+            const tdId = document.createElement("td");
+            tdId.textContent = user.id;
 
-        //     usersList.appendChild(li);
-        // });
+            const tdUsername = document.createElement("td");
+            tdUsername.textContent = user.username;
+            tdUsername.style.cursor = "pointer";
+
+            const tdEmail = document.createElement("td");
+            tdEmail.textContent = user.email;
+
+            const tdFirstName = document.createElement("td");
+            tdFirstName.textContent = user.first_name;
+
+            const tdLastName = document.createElement("td");
+            tdLastName.textContent = user.last_name;
+
+            // Agregar un evento de clic SOLO al username (para redirigir)
+            tdUsername.addEventListener("click", () => {
+                window.location.href = `user_detail.html?id=${user.id}`;
+            });
+
+            // Insertar las celdas en la fila
+            tr.appendChild(tdId);
+            tr.appendChild(tdUsername);
+            tr.appendChild(tdEmail);
+            tr.appendChild(tdFirstName);
+            tr.appendChild(tdLastName);
+
+            // Insertar la fila en la tabla
+            usersTableBody.appendChild(tr);
+        });
     } catch (error) {
-        usersList.innerHTML = `<li>${error.message}</li>`;
+        console.error("Error en fetchWithAuth:", error);
+        throw error;
     }
 });

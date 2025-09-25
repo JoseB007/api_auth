@@ -9,9 +9,17 @@
 // URL base del backend. Ajusta si usas un dominio diferente.
 const API_BASE_URL = "http://localhost:8000/api";
 
+console.clear()
+console.log(getAccessToken())
+
 // Recupera el token de sesión (si existe).
 function getAccessToken() {
     return sessionStorage.getItem("access");
+}
+
+// Recupera el refresh token.
+function getRefreshToken() {
+    return sessionStorage.getItem("refresh");
 }
 
 // Guarda el token de sesión.
@@ -19,13 +27,41 @@ function setAccessToken(token) {
     sessionStorage.setItem("access", token);
 }
 
+// Guarda el refresh
+function setRefreshToken(token) {
+    sessionStorage.setItem("refresh", token);
+}
+
 // Borra el token (logout).
 function clearAccessToken() {
     sessionStorage.removeItem("access");
+    sessionStorage.removeItem("refresh")
 }
 
-// === Función principal para hacer requests ===
 
+// async function refreshAccessToken() {
+//     const refreshToken = getRefreshToken();
+//     if (!refreshToken) {
+//         throw new Error("No hay refresh token disponible");
+//     }
+
+//     const response = await fetch(`${API_BASE_URL}/token/refresh/`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ refresh: refreshToken }),
+//     });
+
+//     if (!response.ok) {
+//         throw new Error("No se pudo refrescar el token");
+//     }
+
+//     const data = await response.json();
+//     setAccessToken(data.access); // guardamos el nuevo access token
+//     return data.access;
+// }
+
+
+// === Función principal para hacer requests ===
 /**
  * fetchWithAuth
  * Envuelve fetch() para incluir automáticamente el header Authorization
@@ -36,10 +72,10 @@ function clearAccessToken() {
  * @returns {Promise} - Respuesta en JSON o error
  */
 async function fetchWithAuth(endpoint, options = {}) {
-    const token = getAccessToken();
+    let token = getAccessToken();
 
     // Construir headers
-    const headers = {
+    let headers = {
         "Content-Type": "application/json",
         ...options.headers,
     };
@@ -49,7 +85,7 @@ async function fetchWithAuth(endpoint, options = {}) {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        let response = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...options,
             headers,
         });
@@ -59,11 +95,32 @@ async function fetchWithAuth(endpoint, options = {}) {
             return null;
         }
 
+        // Si el token expiró (401)
+        if (response.status === 401) {
+            try {
+                // Intentamos refrescar
+                const newAccessToken = await refreshAccessToken();
+
+                // Reintentar la petición con el nuevo token
+                headers["Authorization"] = `Bearer ${newAccessToken}`;
+                response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    ...options,
+                    headers,
+                });
+
+                if (response.status === 204) return null;
+            } catch (refreshError) {
+                console.error("Error refrescando token:", refreshError);
+                clearAccessToken(); // opcional: limpiar también el refresh
+                window.location.href = "index.html"; // forzar login
+                throw refreshError;
+            }
+        }
+
         // Intentar parsear respuesta JSON
         const data = await response.json();
 
         if (!response.ok) {
-            // Si la respuesta es un error (4xx, 5xx)
             throw new Error(data.detail || "Error en la petición");
         }
 

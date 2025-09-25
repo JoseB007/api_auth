@@ -26,16 +26,15 @@ async function login(username, password) {
             throw new Error(data.detail || "Credenciales inválidas");
         }
 
-        console.log(data)
-
         // Guardar el token de acceso en sessionStorage
-        // setAccessToken(data.access);
+        setAccessToken(data.access);
+        setRefreshToken(data.refresh);
 
-        // (Si tu backend también devuelve refresh, lo guardamos después)
-        // sessionStorage.setItem("refresh", data.refresh);
+        // Guardar el refres en sessionStorage
+        sessionStorage.setItem("refresh", data.refresh);
 
         // Redirigir a la lista de usuarios
-        // window.location.href = "users.html";
+        window.location.href = "users.html";
     } catch (error) {
         const messageDiv = document.getElementById("message");
         if (messageDiv) {
