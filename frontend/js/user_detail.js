@@ -13,8 +13,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     try {
         // Petición al endpoint detalle
-        const user = await fetchWithAuth(`/usuarios/${userId}/`);
-        console.log("Detalle del usuario:", user);
+        const user = await fetchWithAuth(`/usuarios/${userId}/`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${getAccessToken()}`,
+                
+            }
+        });
     
         // Mostrar en el HTML
         document.getElementById("userId").textContent = user.id;

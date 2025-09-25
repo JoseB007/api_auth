@@ -9,8 +9,9 @@
 // URL base del backend. Ajusta si usas un dominio diferente.
 const API_BASE_URL = "http://localhost:8000/api";
 
-console.clear()
-console.log(getAccessToken())
+// console.clear();
+// console.log(getAccessToken());
+// console.log(getRefreshToken());
 
 // Recupera el token de sesión (si existe).
 function getAccessToken() {
@@ -35,31 +36,34 @@ function setRefreshToken(token) {
 // Borra el token (logout).
 function clearAccessToken() {
     sessionStorage.removeItem("access");
-    sessionStorage.removeItem("refresh")
+    sessionStorage.removeItem("refresh");
 }
 
+async function refreshAccessToken() {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+        throw new Error("No hay refresh token disponible");
+    }
 
-// async function refreshAccessToken() {
-//     const refreshToken = getRefreshToken();
-//     if (!refreshToken) {
-//         throw new Error("No hay refresh token disponible");
-//     }
+    const response = await fetch(`${API_BASE_URL}/token/refresh/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh: refreshToken }),
+    });
 
-//     const response = await fetch(`${API_BASE_URL}/token/refresh/`, {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({ refresh: refreshToken }),
-//     });
+    if (!response.ok) {
+        throw new Error("No se pudo refrescar el token");
+    }
 
-//     if (!response.ok) {
-//         throw new Error("No se pudo refrescar el token");
-//     }
-
-//     const data = await response.json();
-//     setAccessToken(data.access); // guardamos el nuevo access token
-//     return data.access;
-// }
-
+    const data = await response.json();
+    setAccessToken(data.access); // guardamos el nuevo access token
+    setRefreshToken(data.refresh);
+    console.clear();
+    console.log(data);
+    console.log(getAccessToken());
+    console.log(getRefreshToken());
+    return data.access;
+}
 
 // === Función principal para hacer requests ===
 /**
@@ -111,8 +115,8 @@ async function fetchWithAuth(endpoint, options = {}) {
                 if (response.status === 204) return null;
             } catch (refreshError) {
                 console.error("Error refrescando token:", refreshError);
-                clearAccessToken(); // opcional: limpiar también el refresh
                 window.location.href = "index.html"; // forzar login
+                // clearAccessToken();
                 throw refreshError;
             }
         }
