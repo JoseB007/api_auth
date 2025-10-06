@@ -13,3 +13,14 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
             return True
         # Escritura: solo el autor
         return obj.autor == request.user
+    
+
+class IsAdminOrReadOnly(permissions.BasePermission):
+    """
+    Los superusuarios pueden editar, los demás solo leer el post.
+    """
+
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return request.user.is_superuser

@@ -16,18 +16,13 @@ from .serializers import (
     CustomTokenObtainPairSerializer,
 )
 
+from .permissions import (
+    IsSelfOrAdmin,
+    IsAuthorOrReadOnly,
+    IsAdminOrReadOnly
+)
 
 User = get_user_model()
-
-class CustomTokenObtainPairView(TokenObtainPairView):
-    """
-    Vista personalizada que hereda las funciones de TokenObtainPairView
-    y que usa el serializer personalizado que contiene los datos
-    del usuario.
-    """
-    serializer_class = CustomTokenObtainPairSerializer
-
-
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -37,11 +32,11 @@ class UserViewSet(viewsets.ModelViewSet):
 
     queryset = User.objects.all()
 
-    def get_queryset(self):
-        # Solo devuelve el usuario autenticado
-        if self.action in ['update', 'partial_update', 'destroy']:
-            return User.objects.filter(id=self.request.user.pk)
-        return super().get_queryset()
+    # def get_queryset(self):
+    #     # Solo devuelve el usuario autenticado
+    #     if self.action in ['update', 'partial_update', 'destroy']:
+    #         return User.objects.filter(id=self.request.user.pk)
+    #     return super().get_queryset()
 
     def get_permissions(self):
         """
@@ -50,8 +45,11 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action == "create":
             # Cualquiera puede registrarse
             permission_classes = [AllowAny]
+        elif self.action in ["update", "partial_update", "destroy"]:
+            # Solo el dueño puede editar
+            permission_classes = [IsAuthenticated, IsSelfOrAdmin]
         else:
-            # Para todo lo demás, usuario autenticado
+            # Para todo lo demás (list), usuario autenticado
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
 
@@ -69,6 +67,13 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserReadSerializer
 
 
+class CustomTokenObtainPairView(TokenObtainPairView):
+    """
+    Vista personalizada que hereda las funciones de TokenObtainPairView
+    y que usa el serializer personalizado que contiene los datos
+    del usuario.
+    """
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 class LogoutView(APIView):
@@ -100,8 +105,6 @@ class LogoutView(APIView):
             status=status.HTTP_200_OK
         )
     
-
-
 
 class LogoutAllView(APIView):
     """

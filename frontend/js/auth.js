@@ -1,15 +1,10 @@
-// js/auth.js
-//
 // Lógica de autenticación: login, logout y validación de sesión.
 // Este archivo se carga en index.html (login) y lo podemos reutilizar en otras páginas
 // para verificar si el usuario está autenticado.
 
-//
-// === LOGIN ===
-//
-
-// URL de login (ajusta si tu endpoint es distinto, por ejemplo /token/ o /auth/jwt/create/)
+// URL de login y logout
 const LOGIN_URL = "/token/";
+const LOGOUT_URL = "/logout/";
 
 // Función para hacer login
 async function login(username, password) {
@@ -30,9 +25,6 @@ async function login(username, password) {
         setAccessToken(data.access);
         setRefreshToken(data.refresh);
 
-        // Guardar el refres en sessionStorage
-        sessionStorage.setItem("refresh", data.refresh);
-
         // Redirigir a la lista de usuarios
         window.location.href = "users.html";
     } catch (error) {
@@ -43,17 +35,35 @@ async function login(username, password) {
     }
 }
 
-//
 // === LOGOUT ===
-//
 function logout() {
-    clearAccessToken();
-    window.location.href = "index.html";
-}
+    try {
+        const response = fetchWithAuth(`${LOGOUT_URL}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${getAccessToken()}`,
+            },
+            body: JSON.stringify({"refresh": getRefreshToken()}),
+        });
+    
+        if (!response.ok) {
+            throw new Error("No se pudo cerrar la sesión");
+        } 
 
-//
-// === PROTECCIÓN DE PÁGINAS ===
-//
+        // Borrar el token
+        clearAccessToken();
+
+        // Redirigir al login
+        window.location.href = "index.html";
+    } catch(error) {
+        const messageDiv = document.getElementById("message");
+        if (messageDiv) {
+            messageDiv.textContent = error.message;
+        }
+    }
+
+}
 
 // Si no hay token → redirigir al login
 function requireAuth() {
@@ -62,10 +72,6 @@ function requireAuth() {
         window.location.href = "index.html";
     }
 }
-
-//
-// === EVENTOS DEL LOGIN ===
-//
 
 // Solo se ejecuta en index.html
 document.addEventListener("DOMContentLoaded", () => {

@@ -11,7 +11,7 @@ from apps.usuarios.views import (
 )
 
 router = routers.DefaultRouter()
-router.register(r"api/usuarios", UserViewSet, basename="usuarios")
+router.register(r"api/usuarios", UserViewSet, basename="usuario")
 
 urlpatterns = [
     path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),

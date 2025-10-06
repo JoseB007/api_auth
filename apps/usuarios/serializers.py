@@ -36,7 +36,18 @@ class RegisterSerializer(BaseUserSerializer):
     class Meta(BaseUserSerializer.Meta):
         fields = BaseUserSerializer.Meta.fields + ('password',)
 
+    def validate_email(self, value):
+        """
+        Verifica que el email no este en uso.
+        """
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("El email ya está en uso.")
+        return value
+
     def create(self, validated_data):
+        """
+        Crea el usuario con el password encriptado.
+        """
         password = validated_data.pop('password')
         user = User(**validated_data)
         user.set_password(password)

@@ -6,7 +6,6 @@ from apps.usuarios.serializers import UserReadSerializer
 
 
 
-
 class PostModelSerializer(serializers.ModelSerializer):
     autor = UserReadSerializer(read_only=True)
     detalle_url = serializers.HyperlinkedIdentityField(

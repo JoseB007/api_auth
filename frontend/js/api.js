@@ -1,5 +1,3 @@
-// js/api.js
-//
 // Este archivo define las funciones para interactuar con el backend de Django.
 // Aquí centralizamos el uso de fetch, incluyendo los headers necesarios,
 // manejo de autenticación y errores básicos.
@@ -9,9 +7,9 @@
 // URL base del backend. Ajusta si usas un dominio diferente.
 const API_BASE_URL = "http://localhost:8000/api";
 
-// console.clear();
-// console.log(getAccessToken());
-// console.log(getRefreshToken());
+console.clear();
+console.log(getAccessToken());
+console.log(getRefreshToken());
 
 // Recupera el token de sesión (si existe).
 function getAccessToken() {
@@ -39,6 +37,7 @@ function clearAccessToken() {
     sessionStorage.removeItem("refresh");
 }
 
+// === Función para refrescar el token ===
 async function refreshAccessToken() {
     const refreshToken = getRefreshToken();
     if (!refreshToken) {
@@ -58,10 +57,7 @@ async function refreshAccessToken() {
     const data = await response.json();
     setAccessToken(data.access); // guardamos el nuevo access token
     setRefreshToken(data.refresh);
-    console.clear();
-    console.log(data);
-    console.log(getAccessToken());
-    console.log(getRefreshToken());
+
     return data.access;
 }
 

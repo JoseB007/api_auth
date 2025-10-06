@@ -1,5 +1,3 @@
-// js/users.js
-//
 // Lógica para la pantalla de usuarios (users.html).
 // Carga la lista de usuarios desde el backend y los muestra en la página.
 const USERS_URL = "/usuarios/";
@@ -10,7 +8,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const token = getAccessToken();
     const usersTableBody = document.getElementById("usersTableBody");
-    const logoutBtn = document.getElementById("logout-btn");
+    const logoutBtn = document.getElementById("logout");
+    const userDiv = document.getElementById("user");
 
     // Evento de logout
     if (logoutBtn) {

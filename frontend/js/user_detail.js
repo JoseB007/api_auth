@@ -11,6 +11,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
     
+    const logoutBtn = document.getElementById("logout");
+
+    // Evento de logout
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", logout);
+    }
+    
     try {
         // Petición al endpoint detalle
         const user = await fetchWithAuth(`/usuarios/${userId}/`, {
