@@ -38,7 +38,12 @@ def api_root(request, format=None):
 
 
 class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all()
+    queryset = (
+        Post.objects
+        .select_related("autor")
+        .prefetch_related("likes")
+        .all()
+    )
     serializer_class = PostModelSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsSelfOrAdminOrReadOnly]
 
@@ -54,12 +59,15 @@ class PostViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
     def toggle_like(self, request, *args, **kwargs):
         post = self.get_object()
-        if request.user in post.likes.all():
+
+        # Esto evita cargar toda la relación en memoria y hace una consulta directa al DB.
+        if post.likes.filter(pk=request.user.pk).exists():
             post.likes.remove(request.user)
             liked = False
         else:
             post.likes.add(request.user)
             liked = True
+
         return Response({
             "liked": liked,
             "likes_count": post.likes.count()
@@ -70,7 +78,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
 
 class LikeViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet que solo permite leer los likes (GET)"""
+    """ViewSet que solo permite leer los likes (GET) al admin"""
     queryset = Like.objects.all()
     serializer_class = LikeModelSerializer
     permission_classes = [IsAdminUser]
@@ -80,7 +88,7 @@ class LikeViewSet(viewsets.ReadOnlyModelViewSet):
         """
         Devuelve solo los likes del usuario autenticado
         """
-        likes = Like.objects.filter(user=request.user)
+        likes = Like.objects.filter(user=request.user).select_related("post", "user")
         serializer = self.get_serializer(likes, many=True)
         return Response(serializer.data)
 
