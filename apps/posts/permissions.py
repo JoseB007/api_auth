@@ -1,9 +1,9 @@
 from rest_framework import permissions
 
 
-class IsAuthorOrReadOnly(permissions.BasePermission):
+class IsSelfOrAdminOrReadOnly(permissions.BasePermission):
     """
-    Solo el autor del post puede editarlo o borrarlo.
+    Solo el autor del post o el admin puede editarlo o borrarlo.
     Los demás solo pueden leer.
     """
 
@@ -12,15 +12,5 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         # Escritura: solo el autor
-        return obj.autor == request.user
+        return obj.autor == request.user or request.user.is_superuser
     
-
-class IsAdminOrReadOnly(permissions.BasePermission):
-    """
-    Los superusuarios pueden editar, los demás solo leer el post.
-    """
-
-    def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return request.user.is_superuser

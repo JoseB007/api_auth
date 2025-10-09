@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+from rest_framework.decorators import action
 
 from django.contrib.auth import get_user_model
 
@@ -18,8 +19,6 @@ from .serializers import (
 
 from .permissions import (
     IsSelfOrAdmin,
-    IsAuthorOrReadOnly,
-    IsAdminOrReadOnly
 )
 
 User = get_user_model()
@@ -29,8 +28,8 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     Un ViewSet para manejar CRUD de usuarios.
     """
-
     queryset = User.objects.all()
+    # permission_classes = [IsAuthenticatedOrReadOnly, IsSelfOrAdminOrReadOnly]
 
     # def get_queryset(self):
     #     # Solo devuelve el usuario autenticado
@@ -42,14 +41,14 @@ class UserViewSet(viewsets.ModelViewSet):
         """
         Asigna permisos diferentes según la acción.
         """
-        if self.action == "create":
-            # Cualquiera puede registrarse
+        if self.action in ["create", "list", "retrieve"]:
+            # Cualquiera puede registrarse, ver el listado o ver el detalle de un usuario
             permission_classes = [AllowAny]
         elif self.action in ["update", "partial_update", "destroy"]:
-            # Solo el dueño puede editar
+            # Solo el dueño o un admin puede editar o eliminar (put, patch, delete)
             permission_classes = [IsAuthenticated, IsSelfOrAdmin]
         else:
-            # Para todo lo demás (list), usuario autenticado
+            # Para todo lo demás usuario autenticado
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
 
@@ -65,6 +64,17 @@ class UserViewSet(viewsets.ModelViewSet):
             if self.request.user.is_superuser:
                 return AdminUserReadSerializer
             return UserReadSerializer
+        
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
+    def mi_perfil(self, request, *args, **kwargs):
+        """
+        Devuelve el perfil del usuario autenticado.
+        """
+        if self.request.user.is_superuser:
+            serializer = AdminUserReadSerializer(request.user)
+        else:
+            serializer = UserReadSerializer(request.user)
+        return Response(serializer.data)
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
